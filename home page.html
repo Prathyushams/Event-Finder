@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Event Finder</title>
+  <style>
+   body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color:#f0f2f5;
+      color: black;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 30px;
+      color: #2c3e50;
+    }
+
+    .search-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px;
+    }
+
+    #searchInput {
+      padding: 10px;
+      width: 350px;
+      border: 1px solid #ccc;
+      border-radius: 4px 0 0 4px;
+      outline: none;
+    }
+
+    .search-box button {
+      padding: 10px 20px;
+      border: none;
+      background-color: #007BFF;
+      color: white;
+      border-radius: 0 4px 4px 0;
+      cursor: pointer;
+      transition: background0.3s ease;
+    }
+
+    .search-box button:hover {
+      background-color: #0056b3;
+    }
+
+    #one {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 20px;
+    }
+
+    .sub-container {
+      background-color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      margin: 15px;
+      width: 250px;
+      overflow: hidden;
+      transition: transform 0.3s;
+    }
+
+    .sub-container:hover {
+      transform: scale(1.03);
+    }
+
+    .sub-container img {
+      width: 150%;
+      height: 150px;
+      object-fit: cover;
+    }
+
+    .sub-container h3 {
+      margin: 10px;
+      font-size: 18px;
+    }
+
+    .sub-container button {
+      margin: 10px;
+      padding: 8px 12px;
+      background-color: orange;
+      margin-left: 80px;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background0.3s ease;
+    }
+
+    .sub-container button:hover {
+      background-color: orange;
+    }
+    .container img{
+      width:150%;
+      height: 150px;
+
+    }
+    .container button{
+      margin:10px;
+      padding: 8px 12px;
+      background-color: orange;
+      margin-left: 100px;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+
+    }
+  </style>
+</head>
+<body>
+  <div>
+  <h1>Event Finder</h1>
+  </div>
+<div class="search-box">
+    <input type="text" id="searchInput" placeholder="Search for events (e.g. concert, football)">
+    <button onclick="searchEvents()">Search</button>
+  </div>
+
+  <!-- Display Events -->
+  <div id="one"></div>
+
+  <script>
+    async function getData(keyword = "") {
+      let url = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=OUqz82oQk9OWF5houp8WLvJFddAsZgfW &keyword=${keyword}`;
+      let response = await fetch(url);
+      let data = await response.json();
+
+      console.log("Events: ", data);
+
+      let events = data._embedded?.events || [];
+      document.getElementById("one").innerHTML = "";
+      events.forEach((event) => {
+        document.getElementById("one").innerHTML += `
+          <div class="sub-container">
+            <img src="${event.images?.[0]?.url || ''}" alt="Event Image" width="100%">
+            <h3>Name: ${event.name}</h3>
+            <h3>Type: ${event.classifications?.[0]?.segment?.name || 'N/A'}</h3>
+            <button type="button" class="button" onclick="getEventDetails('${event.id}')">View</button>
+          </div>
+        `;
+      });
+    }
+
+    async function getEventDetails(id) {
+      let url = `https://app.ticketmaster.com/discovery/v2/events/${id}.json?apikey=OUqz82oQk9OWF5houp8WLvJFddAsZgfW`;
+      let response = await fetch(url);
+      let event = await response.json();
+
+      console.log("Event Details: ", event);
+
+      document.getElementById("one").innerHTML = `
+        <div class="container">
+          <img src="${event.images?.[0]?.url || ''}" alt="Event Image" width="100%">
+          <h3>Name: ${event.name}</h3>
+          <h3>Type: ${event.classifications?.[0]?.segment?.name}</h3>
+          <p><b>Date:</b> ${event.dates?.start?.localDate} ${event.dates?.start?.localTime}</p>
+          <p><b>Venue:</b> ${event._embedded?.venues?.[0]?.name || ''}</p>
+          <button type="button" class="button" onclick="getData()">Back</button>
+        </div>
+      `;
+    }
+
+    function searchEvents() {
+      const keyword = document.getElementById("searchInput").value;
+      getData(keyword);
+    }
+    getData();
+  </script>
+
+</body>
+</html>
